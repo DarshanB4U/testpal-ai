@@ -1,0 +1,198 @@
+import { pgTable, text, serial, integer, timestamp, boolean, json, pgEnum } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+import { relations } from "drizzle-orm";
+
+// Enums
+export const difficultyEnum = pgEnum('difficulty', ['easy', 'medium', 'hard']);
+export const questionTypeEnum = pgEnum('question_type', ['multiple_choice', 'true_false', 'essay']);
+
+// User Schema
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const usersRelations = relations(users, ({ many }) => ({
+  testResults: many(testResults),
+}));
+
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+  name: true,
+  email: true,
+});
+
+// Subjects Schema
+export const subjects = pgTable("subjects", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+});
+
+export const subjectsRelations = relations(subjects, ({ many }) => ({
+  topics: many(topics),
+  tests: many(tests),
+}));
+
+export const insertSubjectSchema = createInsertSchema(subjects);
+
+// Topics Schema
+export const topics = pgTable("topics", {
+  id: serial("id").primaryKey(),
+  subjectId: integer("subject_id").references(() => subjects.id).notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+});
+
+export const topicsRelations = relations(topics, ({ one, many }) => ({
+  subject: one(subjects, {
+    fields: [topics.subjectId],
+    references: [subjects.id],
+  }),
+  questions: many(questions),
+}));
+
+export const insertTopicSchema = createInsertSchema(topics);
+
+// Tests Schema
+export const tests = pgTable("tests", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  subjectId: integer("subject_id").references(() => subjects.id),
+  difficulty: difficultyEnum("difficulty").default("medium"),
+  duration: integer("duration").default(60), // Duration in minutes
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const testsRelations = relations(tests, ({ one, many }) => ({
+  subject: one(subjects, {
+    fields: [tests.subjectId],
+    references: [subjects.id],
+  }),
+  questions: many(testQuestions),
+  testResults: many(testResults),
+}));
+
+export const insertTestSchema = createInsertSchema(tests);
+
+// Questions Schema
+export const questions = pgTable("questions", {
+  id: serial("id").primaryKey(),
+  topicId: integer("topic_id").references(() => topics.id).notNull(),
+  content: text("content").notNull(),
+  type: questionTypeEnum("type").default("multiple_choice"),
+  options: json("options"),
+  correctAnswer: text("correct_answer").notNull(),
+  explanation: text("explanation"),
+  difficulty: difficultyEnum("difficulty").default("medium"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const questionsRelations = relations(questions, ({ one, many }) => ({
+  topic: one(topics, {
+    fields: [questions.topicId],
+    references: [topics.id],
+  }),
+  testQuestions: many(testQuestions),
+}));
+
+export const insertQuestionSchema = createInsertSchema(questions);
+
+// Test Questions Junction Table
+export const testQuestions = pgTable("test_questions", {
+  id: serial("id").primaryKey(),
+  testId: integer("test_id").references(() => tests.id).notNull(),
+  questionId: integer("question_id").references(() => questions.id).notNull(),
+  order: integer("order").default(0),
+});
+
+export const testQuestionsRelations = relations(testQuestions, ({ one }) => ({
+  test: one(tests, {
+    fields: [testQuestions.testId],
+    references: [tests.id],
+  }),
+  question: one(questions, {
+    fields: [testQuestions.questionId],
+    references: [questions.id],
+  }),
+}));
+
+export const insertTestQuestionSchema = createInsertSchema(testQuestions);
+
+// Test Results Schema
+export const testResults = pgTable("test_results", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  testId: integer("test_id").references(() => tests.id).notNull(),
+  score: integer("score").notNull(),
+  maxScore: integer("max_score").notNull(),
+  timeTaken: integer("time_taken"), // Time taken in seconds
+  completed: boolean("completed").default(true),
+  answers: json("answers"), // Store user answers
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+});
+
+export const testResultsRelations = relations(testResults, ({ one }) => ({
+  user: one(users, {
+    fields: [testResults.userId],
+    references: [users.id],
+  }),
+  test: one(tests, {
+    fields: [testResults.testId],
+    references: [tests.id],
+  }),
+}));
+
+export const insertTestResultSchema = createInsertSchema(testResults);
+
+// Recommendations Schema
+export const recommendations = pgTable("recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // e.g., "focus_area", "test_strategy", "progress"
+  topicIds: json("topic_ids"), // Array of topic IDs
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const recommendationsRelations = relations(recommendations, ({ one }) => ({
+  user: one(users, {
+    fields: [recommendations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertRecommendationSchema = createInsertSchema(recommendations);
+
+// Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Subject = typeof subjects.$inferSelect;
+export type InsertSubject = z.infer<typeof insertSubjectSchema>;
+
+export type Topic = typeof topics.$inferSelect;
+export type InsertTopic = z.infer<typeof insertTopicSchema>;
+
+export type Test = typeof tests.$inferSelect;
+export type InsertTest = z.infer<typeof insertTestSchema>;
+
+export type Question = typeof questions.$inferSelect;
+export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
+
+export type TestQuestion = typeof testQuestions.$inferSelect;
+export type InsertTestQuestion = z.infer<typeof insertTestQuestionSchema>;
+
+export type TestResult = typeof testResults.$inferSelect;
+export type InsertTestResult = z.infer<typeof insertTestResultSchema>;
+
+export type Recommendation = typeof recommendations.$inferSelect;
+export type InsertRecommendation = z.infer<typeof insertRecommendationSchema>;

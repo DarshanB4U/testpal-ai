@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum QuestionType {
+  multiple_choice
+  true_false
+  essay
+}
+
+model User {
+  id             Int              @id @default(autoincrement())
+  username       String           @unique
+  password       String
+  name           String
+  email          String           @unique
+  createdAt      DateTime         @default(now())
+  testResults    TestResult[]
+  recommendations Recommendation[]
+}
+
+model Subject {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  topics      Topic[]
+  tests       Test[]
+}
+
+model Topic {
+  id          Int         @id @default(autoincrement())
+  subjectId   Int
+  name        String
+  description String?
+  subject     Subject     @relation(fields: [subjectId], references: [id])
+  questions   Question[]
+}
+
+model Test {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?
+  subjectId   Int?
+  difficulty  Difficulty
+  duration    Int
+  createdAt   DateTime      @default(now())
+  subject     Subject?      @relation(fields: [subjectId], references: [id])
+  testQuestions TestQuestion[]
+  testResults TestResult[]
+}
+
+model Question {
+  id           Int           @id @default(autoincrement())
+  topicId      Int
+  content      String
+  type         QuestionType
+  options      String[]
+  correctAnswer String
+  explanation  String?
+  difficulty   Difficulty
+  createdAt    DateTime      @default(now())
+  topic        Topic         @relation(fields: [topicId], references: [id])
+  testQuestions TestQuestion[]
+}
+
+model TestQuestion {
+  id         Int      @id @default(autoincrement())
+  testId     Int
+  questionId Int
+  order      Int
+  test       Test     @relation(fields: [testId], references: [id])
+  question   Question @relation(fields: [questionId], references: [id])
+
+  @@unique([testId, questionId])
+}
+
+model TestResult {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  testId      Int
+  score       Float
+  maxScore    Float
+  timeTaken   Int?
+  completed   Boolean   @default(false)
+  answers     Json?
+  completedAt DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+  test        Test      @relation(fields: [testId], references: [id])
+}
+
+model Recommendation {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  title       String
+  description String
+  type        String
+  topicIds    Int[]
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id])
+}

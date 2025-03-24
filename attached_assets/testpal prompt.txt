@@ -1,0 +1,54 @@
+Design a web-based application called TestPal that focuses on helping students prepare for exams by analyzing their past performance and generating tailored practice material. Below are the essential features and functionalities of the app:
+
+Key Features:
+Student Dashboard:
+
+Display past test results (e.g., marks, topics covered, performance graphs).
+Provide a breakdown of strong and weak areas.
+Suggest upcoming tests and areas for improvement.
+Performance Analytics:
+
+Use historical test data to analyze student progress.
+Show trends in performance over time (e.g., topic-wise, subject-wise).
+Generate insights such as "accuracy in Chemistry improved by 20%" or "struggling in Algebra."
+Custom Practice Papers:
+
+Allow students to create practice papers based on weak areas.
+Include options for difficulty level, time duration, and topics.
+Use an AI model (like OpenAI or Gemini API) to generate questions.
+Learning Recommendations:
+
+Suggest videos, articles, or study notes based on performance gaps.
+Provide personalized schedules to help students cover weak topics efficiently.
+Collaborative Study Groups:
+
+Allow students to join or create groups based on common topics or exams.
+Enable peer-to-peer discussions and doubt-solving.
+Gamification:
+
+Add badges, leaderboards, and milestones to encourage consistent practice.
+Award students for improvements or completing tasks.
+AI-Powered Insights:
+
+Use AI to predict possible scores in future tests based on current progress.
+Recommend "Focus Areas" for upcoming exams.
+Integration:
+
+Allow teachers to upload test data and review student performance.
+Support data upload in various formats (e.g., Excel, CSV).
+Option for parents to track student progress.
+Tech Stack:
+Frontend: React.js with Material-UI or Tailwind CSS for a clean, responsive design.
+Backend: Node.js with Express.js for API handling.
+Database: PostgreSQL (for structured data) + Prisma ORM.
+AI Integration: Use OpenAI or Gemini API for generating practice questions and insights.
+Charts and Graphs: Use libraries like Recharts or Chart.js for analytics visualizations.
+Authentication: Secure student and admin login using JWT.
+Deployment: Use platforms like AWS, Vercel, or Netlify for hosting.
+Additional Features (Optional):
+Offline mode for practicing questions without an internet connection.
+Mobile app integration using React Native for accessibility on the go.
+Real-time notifications for test reminders or new insights.
+Prompt to Start the Project:
+"Build a personalized student learning app, TestPal, that uses past test performance data to generate practice material and actionable insights for exam preparation. Include performance analytics, AI-generated questions, collaborative study tools, and gamified rewards. Focus on a user-friendly UI and seamless data integration. Start with a clean React.js frontend, Express.js backend, and PostgreSQL database. Use AI APIs like Gemini for generating questions tailored to individual student needs."
+
